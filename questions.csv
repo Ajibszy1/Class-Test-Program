@@ -1,0 +1,31 @@
+question,option1,option2,option3,option4,answer,type
+The Power Query feature used to summarize data by categories is ______.,Merge,Append,Group By,Split,Group By,mcq
+In Power BI modeling a one-to-many relationship means ______.,One record links to multiple records,Multiple records link to one,No relationship exists,Tables are merged,One record links to multiple records,mcq
+Which DAX function returns the number of rows in a filtered table?,COUNT,DISTINCTCOUNT,COUNTROWS,SUM,COUNTROWS,mcq
+The DAX function used to calculate an average with row-by-row evaluation is ______.,,,,,AVERAGEX,short
+In Power BI what is a Fact Table mainly used for?,Storing Measures and Transactions,Storing Categories,Creating Relationships,Formatting Data,Storing Measures and Transactions,mcq
+Which Power Query transformation turns rows into columns?,Unpivot,Append,Pivot,Merge,Pivot,mcq
+The Power Query feature used to create a new calculated column is ______.,,,,,Custom Column,short
+In Power Query the feature used to change data types is found under which tab?,Home,Transform,View,Add Column,Transform,mcq
+Which Excel function looks up a value horizontally?,VLOOKUP,XLOOKUP,HLOOKUP,MATCH,HLOOKUP,mcq
+The function used to find the length of a text string is ______.,,,,,LEN,short
+The logical function that returns TRUE if at least one condition is true is ______.,,,,,OR,short
+In Power BI a connection between tables is called a ______.,,,,,Relationship,short
+The function that counts distinct values in Power BI is ______.,UNIQUE,COUNTROWS,DISTINCTCOUNT,VALUES,DISTINCTCOUNT,mcq
+Which DAX function evaluates an expression row by row before summing?,SUM,AVERAGE,SUMX,COUNT,SUMX,mcq
+Power BI is mainly used for ______.,Typing Documents,Data Visualization,Writing Code,Data Entry,Data Visualization,mcq
+Power Query's Close & Load is used to ______.,Delete Data,Refresh Data,Load Data to Excel,Filter Data,Load Data to Excel,mcq
+The Power Query feature that joins two tables based on a related column is ______.,,,,,Merge Queries,short
+The transformation that converts columns into rows in Power Query is called ______.,,,,,Unpivot,short
+Which language is used in Power Query?,SQL,DAX,M Language,Python,M Language,mcq
+Which Power Query feature combines rows from multiple tables?,Merge Queries,Append Queries,Split Column,Pivot,Append Queries,mcq
+Power Query is mainly used for ______.,Data Visualization,Data Cleaning,Creating Charts,Writing DAX,Data Cleaning,mcq
+The Excel function used to return the position of a value in a range is ______.,,,,,MATCH,short
+Which function returns the highest value in a range?,MAX,LARGE,TOP,HIGH,MAX,mcq
+The function that removes extra spaces in Excel is ______.,,,,,TRIM,short
+Which Excel function sums values based on conditions?,SUM,SUMIF,COUNTIF,AVERAGE,SUMIF,mcq
+Power Query function that creates a column with custom index is called _______.,,,,,INDEX COLUMN,short
+The Meaning of ETL in Power BI ________.,,,,,Extract Transform Load,short
+________ is a summary of the main table in Excel.,,,,,Pivot Table,short
+________ is a column that uniquely identifies the rows.,,,,,Primary Key,short
+Which Excel feature allows you to restrict the type of data entered into a cell?,Conditional Formatting,Data Validation,Flash fill,Sort,Data Validation,mcq
