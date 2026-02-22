@@ -5,7 +5,7 @@ import random
 import os
 from datetime import datetime
 
-st.set_page_config(page_title="Academy CBT System", layout="wide")
+st.set_page_config(page_title="Data Analytics Assessment", layout="wide")
 
 # =============================
 # BASIC SECURITY
@@ -67,7 +67,7 @@ def has_submitted(email):
 # =============================
 if st.session_state.page == "login":
 
-    st.title("🎓 Academy CBT System")
+    st.title("Data Analytics Assessment Login")
 
     name = st.text_input("Full Name")
     email = st.text_input("Email")
@@ -132,7 +132,7 @@ if st.session_state.page == "login":
 # =============================
 elif st.session_state.page == "quiz":
 
-    st.title("📝 Assessment")
+    st.title("📝 Data Analytics Assessment")
 
     # Start timer only here
     if st.session_state.start_time is None:
