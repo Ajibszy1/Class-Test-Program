@@ -23,9 +23,10 @@ Power Query is mainly used for ______.,Data Visualization,Data Cleaning,Creating
 The Excel function used to return the position of a value in a range is ______.,,,,,MATCH,short
 Which function returns the highest value in a range?,MAX,LARGE,TOP,HIGH,MAX,mcq
 The function that removes extra spaces in Excel is ______.,,,,,TRIM,short
-Which Excel function sums values based on conditions?,SUM,SUMIF,COUNTIF,AVERAGE,SUMIF,mcq
+Which Excel function sums values based on conditions?,SUMIFS,SUMIF,COUNTIF,AVERAGE,SUMIFS,mcq
 Power Query function that creates a column with custom index is called _______.,,,,,INDEX COLUMN,short
 The Meaning of ETL in Power BI ________.,,,,,Extract Transform Load,short
 ________ is a summary of the main table in Excel.,,,,,Pivot Table,short
 ________ is a column that uniquely identifies the rows.,,,,,Primary Key,short
+
 Which Excel feature allows you to restrict the type of data entered into a cell?,Conditional Formatting,Data Validation,Flash fill,Sort,Data Validation,mcq
