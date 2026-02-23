@@ -4,62 +4,59 @@ import time
 import random
 import os
 from datetime import datetime
-import requests
-from io import StringIO
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import json
 
 st.set_page_config(page_title="Academy CBT System", layout="wide")
 
 # =============================
-# GOOGLE SHEETS SETUP
+# GOOGLE SHEETS SETUP - FIXED VERSION
 # =============================
-# Your Google Sheet ID
-SHEET_ID = "1rjmJg14yNGPF8oU_LhZnuiH7buTFsXkmltJ_9npVMj0"
-SHEET_NAME = "Sheet1"  # Default sheet name
+def init_google_sheets():
+    """Initialize connection to Google Sheets"""
+    try:
+        # For Streamlit Cloud, we'll use secrets
+        if 'gcp_service_account' in st.secrets:
+            # Running on Streamlit Cloud
+            credentials_dict = st.secrets["gcp_service_account"]
+            scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+            credentials = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, scope)
+            client = gspread.authorize(credentials)
+            
+            # Your Google Sheet ID
+            SHEET_ID = "1rjmJg14yNGPF8oU_LhZnuiH7buTFsXkmltJ_9npVMj0"
+            sheet = client.open_by_key(SHEET_ID).sheet1
+            return sheet
+        else:
+            # Running locally - use local file
+            return None
+    except Exception as e:
+        st.warning(f"Could not connect to Google Sheets: {str(e)}")
+        return None
 
 def save_to_google_sheets(name, email, score, percentage):
-    """
-    Save results to Google Sheets using the public CSV export method
-    """
+    """Save results to Google Sheets"""
     try:
-        # First, read the current data from Google Sheets
-        url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME}"
-        response = requests.get(url)
-        
-        if response.status_code == 200:
-            # Read existing data
-            existing_data = pd.read_csv(StringIO(response.text))
+        sheet = init_google_sheets()
+        if sheet:
+            # Prepare the row data
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            new_row = [name, email, score, percentage, timestamp]
             
-            # Create new row
-            new_row = pd.DataFrame([{
-                "Name": name,
-                "Email": email,
-                "Score": score,
-                "Percentage": percentage,
-                "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            }])
+            # Append to Google Sheets
+            sheet.append_row(new_row)
             
-            # Combine existing and new data
-            updated_data = pd.concat([existing_data, new_row], ignore_index=True)
-            
-            # Save to local CSV as backup (will be explained below)
-            updated_data.to_csv("results_backup.csv", index=False)
-            
-            st.success("✅ Results saved successfully!")
-            
-            # Also save locally for admin dashboard
-            if os.path.exists("results.csv"):
-                new_row.to_csv("results.csv", mode="a", header=False, index=False)
-            else:
-                new_row.to_csv("results.csv", index=False)
+            # Also save locally as backup
+            save_locally(name, email, score, percentage)
             
             return True
         else:
             # Fallback to local save
             save_locally(name, email, score, percentage)
             return False
-            
     except Exception as e:
-        st.warning(f"Cloud save issue: {str(e)}. Saving locally instead.")
+        st.warning(f"Could not save to Google Sheets: {str(e)}. Saving locally instead.")
         save_locally(name, email, score, percentage)
         return False
 
@@ -77,6 +74,23 @@ def save_locally(name, email, score, percentage):
         new_row.to_csv("results.csv", mode="a", header=False, index=False)
     else:
         new_row.to_csv("results.csv", index=False)
+
+def get_all_results():
+    """Get all results from Google Sheets or local file"""
+    try:
+        sheet = init_google_sheets()
+        if sheet:
+            # Get all records from Google Sheets
+            records = sheet.get_all_records()
+            if records:
+                return pd.DataFrame(records)
+    except:
+        pass
+    
+    # Fallback to local file
+    if os.path.exists("results.csv"):
+        return pd.read_csv("results.csv")
+    return pd.DataFrame()
 
 # =============================
 # BASIC SECURITY
@@ -138,21 +152,9 @@ def load_questions():
 # CHECK IF STUDENT ALREADY SUBMITTED
 # =============================
 def has_submitted(email):
-    # Check both local and Google Sheets
-    try:
-        # Try to check from Google Sheets
-        url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME}"
-        response = requests.get(url)
-        if response.status_code == 200:
-            df = pd.read_csv(StringIO(response.text))
-            if email.lower() in df["Email"].astype(str).str.lower().values:
-                return True
-    except:
-        pass
-    
-    # Fallback to local check
-    if os.path.exists("results.csv"):
-        df = pd.read_csv("results.csv")
+    # Check from Google Sheets
+    df = get_all_results()
+    if not df.empty and "Email" in df.columns:
         return email.lower() in df["Email"].astype(str).str.lower().values
     return False
 
@@ -305,24 +307,27 @@ elif st.session_state.page == "result":
         st.metric("Percentage", f"{percentage:.1f}%")
     with col3:
         if percentage >= 50:
-            st.metric("Status", "✅ PASS", delta="Congratulations!")
+            st.metric("Status", "✅ PASS")
         else:
-            st.metric("Status", "❌ FAIL", delta="Try Again")
+            st.metric("Status", "❌ FAIL")
 
     # Save result only once
     if not st.session_state.result_saved:
         with st.spinner("Saving your results..."):
             # Try to save to Google Sheets
-            save_to_google_sheets(
+            success = save_to_google_sheets(
                 st.session_state.student_name,
                 st.session_state.student_email,
                 correct,
                 percentage
             )
+            
+            if success:
+                st.success("✅ Results saved to Google Sheets!")
+            else:
+                st.info("📁 Results saved locally (backup)")
         
         st.session_state.result_saved = True
-
-    st.success("✅ Test Submitted Successfully!")
 
     if st.button("📝 View Detailed Corrections"):
         st.session_state.show_correction = True
@@ -370,32 +375,26 @@ elif st.session_state.page == "admin":
     with tab1:
         st.subheader("Test Results")
         
-        # Try to load from Google Sheets first
-        try:
-            url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME}"
-            response = requests.get(url)
-            if response.status_code == 200:
-                df = pd.read_csv(StringIO(response.text))
-                st.dataframe(df, use_container_width=True)
-                
-                # Download button
-                csv = df.to_csv(index=False)
-                st.download_button(
-                    "📥 Download Results CSV",
-                    csv,
-                    "exam_results.csv",
-                    "text/csv",
-                    use_container_width=True
-                )
-            else:
-                st.info("No results in Google Sheets yet.")
-        except:
-            if os.path.exists("results.csv"):
-                df = pd.read_csv("results.csv")
-                st.dataframe(df, use_container_width=True)
-                st.download_button("Download Results", df.to_csv(index=False), "results.csv")
-            else:
-                st.info("No results yet.")
+        # Get results from Google Sheets
+        df = get_all_results()
+        
+        if not df.empty:
+            st.dataframe(df, use_container_width=True)
+            
+            # Download button
+            csv = df.to_csv(index=False)
+            st.download_button(
+                "📥 Download Results CSV",
+                csv,
+                "exam_results.csv",
+                "text/csv",
+                use_container_width=True
+            )
+            
+            # Show total count
+            st.info(f"Total records: {len(df)}")
+        else:
+            st.info("No results yet.")
 
     with tab2:
         st.subheader("Upload New Questions")
@@ -420,31 +419,27 @@ elif st.session_state.page == "admin":
         st.subheader("Analytics")
         
         # Load data for analytics
-        try:
-            url = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={SHEET_NAME}"
-            response = requests.get(url)
-            if response.status_code == 200:
-                df = pd.read_csv(StringIO(response.text))
-                
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric("Total Students", len(df))
-                    st.metric("Average Score", f"{df['Score'].mean():.1f}")
-                with col2:
-                    pass_rate = (df['Percentage'] >= 50).mean() * 100
-                    st.metric("Pass Rate", f"{pass_rate:.1f}%")
-                    st.metric("Highest Score", df['Score'].max())
-                
-                # Show distribution
-                st.subheader("Score Distribution")
-                score_dist = df['Score'].value_counts().sort_index()
-                st.bar_chart(score_dist)
-            else:
-                st.info("No data available for analytics.")
-        except:
-            if os.path.exists("results.csv"):
-                df = pd.read_csv("results.csv")
-                st.write("Average Score:", df["Score"].mean())
-                st.write("Pass Rate (%):", (df["Percentage"] >= 50).mean() * 100)
-            else:
-                st.info("No data available.")
+        df = get_all_results()
+        
+        if not df.empty:
+            col1, col2 = st.columns(2)
+            with col1:
+                st.metric("Total Students", len(df))
+                st.metric("Average Score", f"{df['Score'].mean():.1f}")
+            with col2:
+                pass_rate = (df['Percentage'] >= 50).mean() * 100
+                st.metric("Pass Rate", f"{pass_rate:.1f}%")
+                st.metric("Highest Score", df['Score'].max())
+            
+            # Show distribution
+            st.subheader("Score Distribution")
+            score_dist = df['Score'].value_counts().sort_index()
+            st.bar_chart(score_dist)
+            
+            # Show recent submissions
+            st.subheader("Recent Submissions")
+            if 'Timestamp' in df.columns:
+                recent = df.sort_values('Timestamp', ascending=False).head(5)
+                st.dataframe(recent)
+        else:
+            st.info("No data available for analytics.")
